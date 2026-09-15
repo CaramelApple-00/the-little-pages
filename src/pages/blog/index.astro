@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const posts = allPosts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+---
+<Layout title="Blog — The Little Pages">
+  <div class="page-head">
+    <span class="kicker">blog</span>
+    <h1>The pages in between</h1>
+    <p>The prose version of thinking out loud.</p>
+  </div>
+
+  {posts.map((post) => (
+    <a class="post" href={`/blog/${post.id}`}>
+      <div class="post-left">
+        <h3 class="heading">{post.data.title}</h3>
+        <p>{post.data.excerpt}</p>
+      </div>
+      <div class="post-date">{formatDate(post.data.date)}</div>
+    </a>
+  ))}
+
+  {posts.length === 0 && <p class="empty">No posts yet — add a markdown file to src/content/blog to get started.</p>}
+</Layout>
+
+<style>
+  .post {
+    padding: 34px 0;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: padding-left 0.25s ease;
+  }
+  .post:hover { padding-left: 8px; }
+
+  .post-left h3 { font-size: 24px; letter-spacing: 0.2px; margin: 0 0 8px; color: var(--ink); }
+  .post-left p { font-family: 'Cormorant Garamond', serif; margin: 0; font-size: 17px; color: var(--ink-soft); line-height: 1.5; max-width: 56ch; }
+  .post-date { font-size: 13px; color: var(--gold); white-space: nowrap; font-family: 'Work Sans', sans-serif; }
+
+  .empty { color: var(--ink-soft); font-family: 'Cormorant Garamond', serif; font-size: 18px; padding: 40px 0; }
+</style>

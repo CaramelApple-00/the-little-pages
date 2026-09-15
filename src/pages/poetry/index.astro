@@ -1,0 +1,62 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+const allPoems = await getCollection('poetry', ({ data }) => !data.draft);
+const poems = allPoems.sort((a, b) => (a.data.title > b.data.title ? 1 : -1));
+---
+<Layout title="Poetry — The Little Pages">
+  <div class="page-head">
+    <span class="kicker">poetry</span>
+    <h1>The pages that rhyme</h1>
+    <p>Organized loosely, by feeling more than by date. Some are finished. Some are still steeping.</p>
+  </div>
+
+  {poems.map((poem) => (
+    <div class="poem-entry">
+      <div class="poem-meta">
+        <a class="title heading" href={`/poetry/${poem.id}`}>{poem.data.title}</a>
+        <div class="tag">{poem.data.chapter}</div>
+      </div>
+      <div class="poem-preview">
+        <p>{poem.data.note ?? 'Read the full poem →'}</p>
+      </div>
+    </div>
+  ))}
+
+  {poems.length === 0 && <p class="empty">No poems posted yet — add a markdown file to src/content/poetry to get started.</p>}
+</Layout>
+
+<style>
+  .poem-entry {
+    padding: 40px 0;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 36px;
+  }
+  @media (max-width: 700px) { .poem-entry { grid-template-columns: 1fr; gap: 14px; } }
+
+  .poem-meta .title {
+    display: block;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 27px;
+    color: var(--cocoa);
+    margin: 0 0 6px;
+    text-decoration: none;
+  }
+  .poem-meta .title:hover { text-decoration: underline; }
+  .poem-meta .tag { font-size: 13px; color: var(--ink-soft); font-family: 'Work Sans', sans-serif; }
+
+  .poem-preview p {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    line-height: 1.7;
+    max-width: 62ch;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .empty { color: var(--ink-soft); font-family: 'Cormorant Garamond', serif; font-size: 18px; padding: 40px 0; }
+</style>

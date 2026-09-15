@@ -1,0 +1,65 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const poems = await getCollection('poetry', ({ data }) => !data.draft);
+  return poems.map((poem) => ({
+    params: { id: poem.id },
+    props: { poem },
+  }));
+}
+
+const { poem } = Astro.props;
+const { Content } = await render(poem);
+---
+<Layout title={`${poem.data.title} — The Little Pages`}>
+  <div class="page-head">
+    <span class="kicker">{poem.data.chapter}</span>
+    <h1 class="italic">{poem.data.title}</h1>
+  </div>
+
+  <div class="poem-body">
+    <Content />
+  </div>
+
+  {poem.data.note && (
+    <div class="note">Notes: {poem.data.note}</div>
+  )}
+
+  <a class="back" href="/poetry">← back to poetry</a>
+</Layout>
+
+<style>
+  .page-head h1.italic { font-style: italic; }
+
+  .poem-body {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    line-height: 1.9;
+    max-width: 62ch;
+    color: var(--ink);
+    padding-bottom: 20px;
+  }
+  .poem-body :global(p) { margin: 0 0 4px; }
+
+  .note {
+    margin-top: 24px;
+    max-width: 62ch;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink-soft);
+    font-style: italic;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .back {
+    display: inline-block;
+    margin-top: 40px;
+    font-size: 14px;
+    color: var(--cocoa);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gold-soft);
+  }
+</style>

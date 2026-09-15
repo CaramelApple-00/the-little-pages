@@ -1,0 +1,132 @@
+---
+interface Props {
+  title?: string;
+}
+const { title = 'The Little Pages' } = Astro.props;
+const path = Astro.url.pathname;
+
+function isActive(href: string) {
+  if (href === '/') return path === '/';
+  return path.startsWith(href);
+}
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <header>
+    <a class="wordmark" href="/">The <span>Little</span> Pages</a>
+    <nav>
+      <a class:list={["navlink", { active: isActive('/') }]} href="/">Home</a>
+      <a class:list={["navlink", { active: isActive('/poetry') }]} href="/poetry">Poetry</a>
+      <a class:list={["navlink", { active: isActive('/blog') }]} href="/blog">Blog</a>
+      <a class:list={["navlink", { active: isActive('/vlog') }]} href="/vlog">Vlog</a>
+    </nav>
+  </header>
+
+  <main>
+    <slot />
+  </main>
+
+  <footer>the little pages — written, not perfected</footer>
+</body>
+</html>
+
+<style is:global>
+  :root {
+    --cream: #f7f1e6;
+    --cream-deep: #f1e8d8;
+    --ink: #3a2b1d;
+    --ink-soft: #7a6852;
+    --gold: #a9782e;
+    --gold-soft: #c9a868;
+    --cocoa: #5c3a21;
+    --blush: #e8c9a0;
+    --rule: rgba(58, 43, 29, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--blush); color: var(--cocoa); }
+
+  .serif { font-family: 'Fraunces', serif; }
+  .heading { font-family: 'Cormorant Garamond', serif; font-weight: 600; }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 6vw 22px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    color: var(--cocoa);
+    text-decoration: none;
+  }
+  .wordmark span { font-style: normal; font-weight: 400; color: var(--ink); }
+
+  nav { display: flex; gap: 36px; }
+  .navlink {
+    font-size: 15px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding-bottom: 6px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .navlink:hover { color: var(--cocoa); border-bottom-color: var(--blush); }
+  .navlink.active { color: var(--cocoa); border-bottom-color: var(--gold); }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 0 6vw 100px; }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 8px 0 56px; }
+
+  .page-head { padding: 64px 0 40px; max-width: 600px; }
+  .page-head .kicker { color: var(--gold); font-size: 14px; display: block; margin-bottom: 10px; }
+  .page-head h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: clamp(36px, 4.8vw, 48px);
+    letter-spacing: 0.2px;
+    margin: 0 0 14px;
+  }
+  .page-head p {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--ink-soft);
+    font-size: 18px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  footer {
+    padding: 40px 6vw 60px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+</style>

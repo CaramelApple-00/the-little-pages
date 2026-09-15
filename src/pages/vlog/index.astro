@@ -1,0 +1,60 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+const allVideos = await getCollection('vlog', ({ data }) => !data.draft);
+const videos = allVideos.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+<Layout title="Vlog — The Little Pages">
+  <div class="page-head">
+    <span class="kicker">vlog</span>
+    <h1>The pages out loud</h1>
+    <p>For everything a page can't quite hold.</p>
+  </div>
+
+  <div class="vlog-grid">
+    {videos.map((video) => (
+      <div class="vlog-item">
+        {video.data.videoUrl ? (
+          <a class="frame" href={video.data.videoUrl} target="_blank" rel="noreferrer">watch</a>
+        ) : (
+          <div class="frame">coming soon</div>
+        )}
+        <h3 class="heading">{video.data.title}</h3>
+        <p>{video.data.description}</p>
+      </div>
+    ))}
+  </div>
+
+  {videos.length === 0 && <p class="empty">No videos yet — add a markdown file to src/content/vlog to get started.</p>}
+</Layout>
+
+<style>
+  .vlog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px 32px;
+    padding-top: 10px;
+    padding-bottom: 40px;
+  }
+  @media (max-width: 700px) { .vlog-grid { grid-template-columns: 1fr; } }
+
+  .vlog-item .frame {
+    aspect-ratio: 16 / 10;
+    background: var(--cream-deep);
+    border: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold-soft);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    margin-bottom: 14px;
+    text-decoration: none;
+  }
+  .vlog-item h3 { font-size: 22px; letter-spacing: 0.2px; margin: 0 0 6px; }
+  .vlog-item p { font-family: 'Cormorant Garamond', serif; margin: 0; font-size: 16px; color: var(--ink-soft); }
+
+  .empty { color: var(--ink-soft); font-family: 'Cormorant Garamond', serif; font-size: 18px; padding: 40px 0; }
+</style>
