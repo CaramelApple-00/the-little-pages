@@ -41,7 +41,8 @@ const { Content } = await render(poem);
     color: var(--ink);
     padding-bottom: 20px;
   }
-  .poem-body :global(p) { margin: 0 0 4px; }
+  .poem-body :global(p) { margin: 0 0 28px; }
+  .poem-body :global(p:last-child) { margin-bottom: 0; }
 
   .note {
     margin-top: 24px;
