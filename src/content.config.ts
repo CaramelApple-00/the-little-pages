@@ -8,6 +8,7 @@ const poetry = defineCollection({
     chapter: z.string().default('in the feels'),
     date: z.date().optional(),
     note: z.string().optional(),
+    isNew: z.boolean().default(false),
     draft: z.boolean().default(false),
   }),
 });
@@ -18,6 +19,7 @@ const blog = defineCollection({
     title: z.string(),
     excerpt: z.string(),
     date: z.date(),
+    isNew: z.boolean().default(false),
     draft: z.boolean().default(false),
   }),
 });
@@ -29,6 +31,7 @@ const vlog = defineCollection({
     description: z.string(),
     videoUrl: z.string().optional(),
     date: z.date(),
+    isNew: z.boolean().default(false),
     draft: z.boolean().default(false),
   }),
 });

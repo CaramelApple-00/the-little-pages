@@ -1,6 +1,7 @@
 ---
 title: "What If"
 chapter: "in the feels"
+isNew: true
 ---
 
 What if?\

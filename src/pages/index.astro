@@ -1,5 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const poems = await getCollection('poetry', ({ data }) => !data.draft);
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const videos = await getCollection('vlog', ({ data }) => !data.draft);
+
+const poetryIsNew = poems.some((p) => p.data.isNew);
+const blogIsNew = posts.some((p) => p.data.isNew);
+const vlogIsNew = videos.some((v) => v.data.isNew);
 ---
 <Layout title="The Little Pages">
   <section class="hero">
@@ -23,19 +32,19 @@ import Layout from '../layouts/Layout.astro';
   <div class="home-grid">
     <div class="home-card">
       <span class="kicker">poetry</span>
-      <h3 class="heading">The pages that rhyme</h3>
+      <h3 class="heading">The pages that rhyme {poetryIsNew && <span class="new-badge">new post!</span>}</h3>
       <p>What doesn't fit in small talk.</p>
       <a class="enter" href="/poetry">Read the poems</a>
     </div>
     <div class="home-card">
       <span class="kicker">blog</span>
-      <h3 class="heading">The pages in between</h3>
+      <h3 class="heading">The pages in between {blogIsNew && <span class="new-badge">new post!</span>}</h3>
       <p>Unfiltered, a little chaotic, mostly honest — basically my brain in paragraph form.</p>
       <a class="enter" href="/blog">Read the blog</a>
     </div>
     <div class="home-card">
       <span class="kicker">vlog</span>
-      <h3 class="heading">The pages out loud</h3>
+      <h3 class="heading">The pages out loud {vlogIsNew && <span class="new-badge">new post!</span>}</h3>
       <p>For the days a page isn't enough — when it needs a voice and a face and a little less editing.</p>
       <a class="enter" href="/vlog">Watch the vlog</a>
     </div>
@@ -72,7 +81,19 @@ import Layout from '../layouts/Layout.astro';
   }
   @media (max-width: 760px) { .home-grid { grid-template-columns: 1fr; gap: 40px; } }
 
-  .home-card h3 { font-size: 25px; letter-spacing: 0.2px; margin: 0 0 10px; color: var(--cocoa); }
+  .home-card h3 { font-size: 25px; letter-spacing: 0.2px; margin: 0 0 10px; color: var(--cocoa); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .new-badge {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    color: var(--cream);
+    background: var(--gold);
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: lowercase;
+    white-space: nowrap;
+  }
   .home-card .kicker { font-size: 13px; color: var(--gold); margin-bottom: 8px; display: block; }
   .home-card p { font-family: 'Cormorant Garamond', serif; font-size: 17px; line-height: 1.55; color: var(--ink-soft); margin: 0 0 14px; }
 
