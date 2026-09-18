@@ -71,6 +71,30 @@ const { pageSlug } = Astro.props;
     color: var(--ink-soft);
     margin-top: 6px;
   }
+  .comment-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .like-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding: 4px 6px;
+    border-radius: 12px;
+    transition: color 0.2s ease;
+  }
+  .like-btn .heart { font-size: 15px; }
+  .like-btn:hover:not(:disabled) { color: var(--gold); }
+  .like-btn.liked { color: var(--cocoa); }
+  .like-btn:disabled { cursor: default; }
 
   .comment-form {
     display: flex;
@@ -143,7 +167,7 @@ const { pageSlug } = Astro.props;
   async function loadComments() {
     const { data, error } = await supabase
       .from('comments')
-      .select('name, body, created_at')
+      .select('id, name, body, created_at, likes')
       .eq('page_slug', pageSlug)
       .eq('approved', true)
       .order('created_at', { ascending: false });
@@ -158,16 +182,42 @@ const { pageSlug } = Astro.props;
       return;
     }
 
+    const likedIds: string[] = JSON.parse(localStorage.getItem('likedComments') || '[]');
+
     listEl.innerHTML = data
-      .map(
-        (c) => `
+      .map((c) => {
+        const alreadyLiked = likedIds.includes(c.id);
+        return `
         <div class="comment-item">
           <p class="comment-name">${escapeHtml(c.name)}</p>
           <p class="comment-body">${escapeHtml(c.body)}</p>
-          <p class="comment-date">${formatDate(c.created_at)}</p>
-        </div>`
-      )
+          <div class="comment-footer">
+            <p class="comment-date">${formatDate(c.created_at)}</p>
+            <button class="like-btn ${alreadyLiked ? 'liked' : ''}" data-like="${c.id}" ${alreadyLiked ? 'disabled' : ''}>
+              <span class="heart">${alreadyLiked ? '♥' : '♡'}</span> <span class="like-count">${c.likes ?? 0}</span>
+            </button>
+          </div>
+        </div>`;
+      })
       .join('');
+
+    document.querySelectorAll('[data-like]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        const id = (btn as HTMLElement).dataset.like!;
+        (btn as HTMLButtonElement).disabled = true;
+        await supabase.rpc('increment_comment_likes', { comment_id: id });
+
+        const liked: string[] = JSON.parse(localStorage.getItem('likedComments') || '[]');
+        liked.push(id);
+        localStorage.setItem('likedComments', JSON.stringify(liked));
+
+        const countEl = btn.querySelector('.like-count')!;
+        const heartEl = btn.querySelector('.heart')!;
+        countEl.textContent = String(Number(countEl.textContent) + 1);
+        heartEl.textContent = '♥';
+        btn.classList.add('liked');
+      })
+    );
   }
 
   formEl?.addEventListener('submit', async (e) => {
