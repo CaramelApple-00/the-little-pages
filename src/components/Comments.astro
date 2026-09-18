@@ -1,0 +1,201 @@
+---
+interface Props {
+  pageSlug: string;
+}
+const { pageSlug } = Astro.props;
+---
+<div class="comments-section" data-page-slug={pageSlug}>
+  <h3 class="comments-heading heading">Comments</h3>
+
+  <div class="comments-list" id="comments-list">
+    <p class="comments-loading">Loading comments…</p>
+  </div>
+
+  <form class="comment-form" id="comment-form">
+    <div class="form-row">
+      <label for="comment-name">Name</label>
+      <input type="text" id="comment-name" name="name" maxlength="60" required />
+    </div>
+    <div class="form-row">
+      <label for="comment-body">Comment</label>
+      <textarea id="comment-body" name="body" rows="4" maxlength="2000" required></textarea>
+    </div>
+    <button type="submit" id="comment-submit">Post comment</button>
+    <p class="comment-status" id="comment-status"></p>
+    <p class="comment-note">Comments are reviewed before they show up publicly.</p>
+  </form>
+</div>
+
+<style>
+  .comments-section {
+    margin-top: 64px;
+    padding-top: 40px;
+    border-top: 1px solid var(--rule);
+    max-width: 62ch;
+  }
+  .comments-heading {
+    font-size: 24px;
+    margin: 0 0 24px;
+    color: var(--cocoa);
+  }
+
+  .comments-list { margin-bottom: 40px; }
+  .comments-loading, .comments-empty {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    color: var(--ink-soft);
+  }
+
+  .comment-item {
+    padding: 18px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .comment-item:first-child { border-top: none; }
+  .comment-item .comment-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--cocoa);
+    margin: 0 0 4px;
+  }
+  .comment-item .comment-body {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin: 0;
+  }
+  .comment-item .comment-date {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+
+  .comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 480px;
+  }
+  .form-row { display: flex; flex-direction: column; gap: 6px; }
+  .form-row label {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .form-row input, .form-row textarea {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 15px;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--cream-deep);
+    color: var(--ink);
+    resize: vertical;
+  }
+  .form-row input:focus, .form-row textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .comment-form button {
+    align-self: flex-start;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cream);
+    background: var(--cocoa);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .comment-form button:hover { background: var(--gold); }
+  .comment-form button:disabled { opacity: 0.6; cursor: default; }
+
+  .comment-status { font-size: 13px; color: var(--gold); min-height: 18px; margin: 0; }
+  .comment-note { font-size: 12px; color: var(--ink-soft); margin: 0; }
+</style>
+
+<script>
+  import { supabase } from '../lib/supabase';
+
+  const section = document.querySelector<HTMLElement>('.comments-section');
+  const pageSlug = section?.dataset.pageSlug ?? '';
+
+  const listEl = document.getElementById('comments-list')!;
+  const formEl = document.getElementById('comment-form') as HTMLFormElement;
+  const statusEl = document.getElementById('comment-status')!;
+  const submitBtn = document.getElementById('comment-submit') as HTMLButtonElement;
+
+  function escapeHtml(str: string) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  async function loadComments() {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('name, body, created_at')
+      .eq('page_slug', pageSlug)
+      .eq('approved', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      listEl.innerHTML = `<p class="comments-empty">Couldn't load comments right now.</p>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      listEl.innerHTML = `<p class="comments-empty">No comments yet — be the first.</p>`;
+      return;
+    }
+
+    listEl.innerHTML = data
+      .map(
+        (c) => `
+        <div class="comment-item">
+          <p class="comment-name">${escapeHtml(c.name)}</p>
+          <p class="comment-body">${escapeHtml(c.body)}</p>
+          <p class="comment-date">${formatDate(c.created_at)}</p>
+        </div>`
+      )
+      .join('');
+  }
+
+  formEl?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = (document.getElementById('comment-name') as HTMLInputElement).value.trim();
+    const body = (document.getElementById('comment-body') as HTMLTextAreaElement).value.trim();
+    if (!name || !body) return;
+
+    submitBtn.disabled = true;
+    statusEl.textContent = 'Posting…';
+
+    const { error } = await supabase.from('comments').insert({
+      page_slug: pageSlug,
+      name,
+      body,
+      approved: false,
+    });
+
+    submitBtn.disabled = false;
+
+    if (error) {
+      statusEl.textContent = "Something went wrong — try again in a bit.";
+      return;
+    }
+
+    formEl.reset();
+    statusEl.textContent = "Thanks! Your comment is awaiting approval.";
+  });
+
+  loadComments();
+</script>

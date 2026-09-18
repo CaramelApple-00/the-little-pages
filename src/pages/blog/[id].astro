@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import Comments from '../../components/Comments.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -28,6 +29,8 @@ function formatDate(d: Date) {
   </div>
 
   <a class="back" href="/blog">← back to blog</a>
+
+  <Comments pageSlug={`blog-${post.id}`} />
 </Layout>
 
 <style>

@@ -1,0 +1,213 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout title="Comment approvals — The Little Pages">
+  <div class="page-head">
+    <span class="kicker">private</span>
+    <h1>Comment approvals</h1>
+  </div>
+
+  <div id="login-box" class="login-box">
+    <p>Log in to review comments.</p>
+    <div class="form-row">
+      <label for="admin-email">Email</label>
+      <input type="email" id="admin-email" />
+    </div>
+    <div class="form-row">
+      <label for="admin-password">Password</label>
+      <input type="password" id="admin-password" />
+    </div>
+    <button id="login-btn">Log in</button>
+    <p id="login-status" class="status"></p>
+  </div>
+
+  <div id="admin-box" class="admin-box" style="display:none;">
+    <div class="admin-header">
+      <p>Logged in.</p>
+      <button id="logout-btn" class="text-btn">Log out</button>
+    </div>
+
+    <h2 class="section-heading">Pending</h2>
+    <div id="pending-list"></div>
+
+    <h2 class="section-heading">Approved</h2>
+    <div id="approved-list"></div>
+  </div>
+</Layout>
+
+<style>
+  .login-box, .admin-box { max-width: 560px; padding-bottom: 80px; }
+  .form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .form-row label { font-family: 'Work Sans', sans-serif; font-size: 13px; color: var(--ink-soft); }
+  .form-row input {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 15px;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--cream-deep);
+    color: var(--ink);
+  }
+  #login-btn {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cream);
+    background: var(--cocoa);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .status { font-size: 13px; color: var(--gold); margin-top: 12px; }
+
+  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .text-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Work Sans', sans-serif; font-size: 13px;
+    color: var(--cocoa); text-decoration: underline;
+  }
+
+  .section-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--cocoa);
+    margin: 32px 0 16px;
+  }
+
+  .admin-comment {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .admin-comment .meta {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .admin-comment .body-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+  .admin-comment .actions { display: flex; gap: 10px; }
+  .admin-comment button {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--rule);
+    background: var(--cream);
+    cursor: pointer;
+  }
+  .admin-comment .approve-btn { border-color: var(--gold); color: var(--cocoa); }
+  .admin-comment .delete-btn { color: #a23; }
+  .empty-note { font-family: 'Cormorant Garamond', serif; color: var(--ink-soft); font-size: 16px; }
+</style>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+
+  const loginBox = document.getElementById('login-box')!;
+  const adminBox = document.getElementById('admin-box')!;
+  const loginStatus = document.getElementById('login-status')!;
+
+  async function checkSession() {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      loginBox.style.display = 'none';
+      adminBox.style.display = 'block';
+      loadComments();
+    } else {
+      loginBox.style.display = 'block';
+      adminBox.style.display = 'none';
+    }
+  }
+
+  document.getElementById('login-btn')?.addEventListener('click', async () => {
+    const email = (document.getElementById('admin-email') as HTMLInputElement).value;
+    const password = (document.getElementById('admin-password') as HTMLInputElement).value;
+    loginStatus.textContent = 'Logging in…';
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      loginStatus.textContent = 'Login failed — check your email and password.';
+      return;
+    }
+    loginStatus.textContent = '';
+    checkSession();
+  });
+
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    checkSession();
+  });
+
+  function escapeHtml(str: string) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  async function loadComments() {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('id, page_slug, name, body, created_at, approved')
+      .order('created_at', { ascending: false });
+
+    const pendingEl = document.getElementById('pending-list')!;
+    const approvedEl = document.getElementById('approved-list')!;
+
+    if (error || !data) {
+      pendingEl.innerHTML = `<p class="empty-note">Couldn't load comments.</p>`;
+      return;
+    }
+
+    const pending = data.filter((c) => !c.approved);
+    const approved = data.filter((c) => c.approved);
+
+    pendingEl.innerHTML = pending.length
+      ? pending.map(renderComment).join('')
+      : `<p class="empty-note">Nothing pending.</p>`;
+
+    approvedEl.innerHTML = approved.length
+      ? approved.map(renderComment).join('')
+      : `<p class="empty-note">Nothing approved yet.</p>`;
+
+    document.querySelectorAll('[data-approve]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        const id = (btn as HTMLElement).dataset.approve;
+        await supabase.from('comments').update({ approved: true }).eq('id', id);
+        loadComments();
+      })
+    );
+    document.querySelectorAll('[data-delete]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        const id = (btn as HTMLElement).dataset.delete;
+        if (!confirm('Delete this comment for good?')) return;
+        await supabase.from('comments').delete().eq('id', id);
+        loadComments();
+      })
+    );
+  }
+
+  function renderComment(c: any) {
+    return `
+      <div class="admin-comment">
+        <div class="meta">${escapeHtml(c.name)} · ${formatDate(c.created_at)} · on ${escapeHtml(c.page_slug)}</div>
+        <p class="body-text">${escapeHtml(c.body)}</p>
+        <div class="actions">
+          ${!c.approved ? `<button class="approve-btn" data-approve="${c.id}">Approve</button>` : ''}
+          <button class="delete-btn" data-delete="${c.id}">Delete</button>
+        </div>
+      </div>`;
+  }
+
+  checkSession();
+</script>
