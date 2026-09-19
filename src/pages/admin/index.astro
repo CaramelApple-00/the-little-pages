@@ -21,6 +21,16 @@ import Layout from '../../layouts/Layout.astro';
     <p id="login-status" class="status"></p>
   </div>
 
+  <div id="recovery-box" class="login-box" style="display:none;">
+    <p>Set a new password for your account.</p>
+    <div class="form-row">
+      <label for="new-password">New password</label>
+      <input type="password" id="new-password" />
+    </div>
+    <button id="set-password-btn">Set password</button>
+    <p id="recovery-status" class="status"></p>
+  </div>
+
   <div id="admin-box" class="admin-box" style="display:none;">
     <div class="admin-header">
       <p>Logged in.</p>
@@ -113,7 +123,35 @@ import Layout from '../../layouts/Layout.astro';
 
   const loginBox = document.getElementById('login-box')!;
   const adminBox = document.getElementById('admin-box')!;
+  const recoveryBox = document.getElementById('recovery-box')!;
   const loginStatus = document.getElementById('login-status')!;
+  const recoveryStatus = document.getElementById('recovery-status')!;
+
+  // If this page was opened from a "reset password" email link, Supabase fires this event.
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      loginBox.style.display = 'none';
+      adminBox.style.display = 'none';
+      recoveryBox.style.display = 'block';
+    }
+  });
+
+  document.getElementById('set-password-btn')?.addEventListener('click', async () => {
+    const newPassword = (document.getElementById('new-password') as HTMLInputElement).value;
+    if (!newPassword || newPassword.length < 6) {
+      recoveryStatus.textContent = 'Password needs to be at least 6 characters.';
+      return;
+    }
+    recoveryStatus.textContent = 'Saving…';
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      recoveryStatus.textContent = "Something went wrong — try again.";
+      return;
+    }
+    recoveryStatus.textContent = "Password set! Loading your dashboard…";
+    recoveryBox.style.display = 'none';
+    checkSession();
+  });
 
   async function checkSession() {
     const { data } = await supabase.auth.getSession();
@@ -209,5 +247,10 @@ import Layout from '../../layouts/Layout.astro';
       </div>`;
   }
 
-  checkSession();
+  // Skip the normal login check if this page was just opened from a password-reset link —
+  // the PASSWORD_RECOVERY event above will handle showing the right screen instead.
+  const isRecoveryLink = window.location.hash.includes('type=recovery');
+  if (!isRecoveryLink) {
+    checkSession();
+  }
 </script>
