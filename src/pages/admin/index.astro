@@ -127,14 +127,14 @@ import Layout from '../../layouts/Layout.astro';
   const loginStatus = document.getElementById('login-status')!;
   const recoveryStatus = document.getElementById('recovery-status')!;
 
-  // If this page was opened from a "reset password" email link, Supabase fires this event.
-  supabase.auth.onAuthStateChange((event) => {
-    if (event === 'PASSWORD_RECOVERY') {
-      loginBox.style.display = 'none';
-      adminBox.style.display = 'none';
-      recoveryBox.style.display = 'block';
-    }
-  });
+  // If this page was opened from a "reset password" email link, show the password box
+  // right away by reading the link itself — no need to wait on an async event for this.
+  const isRecoveryLink = window.location.hash.includes('type=recovery');
+  if (isRecoveryLink) {
+    loginBox.style.display = 'none';
+    adminBox.style.display = 'none';
+    recoveryBox.style.display = 'block';
+  }
 
   document.getElementById('set-password-btn')?.addEventListener('click', async () => {
     const newPassword = (document.getElementById('new-password') as HTMLInputElement).value;
@@ -247,9 +247,8 @@ import Layout from '../../layouts/Layout.astro';
       </div>`;
   }
 
-  // Skip the normal login check if this page was just opened from a password-reset link —
-  // the PASSWORD_RECOVERY event above will handle showing the right screen instead.
-  const isRecoveryLink = window.location.hash.includes('type=recovery');
+  // Skip the normal login check on a fresh recovery link — the block above already
+  // showed the right screen for that case.
   if (!isRecoveryLink) {
     checkSession();
   }
