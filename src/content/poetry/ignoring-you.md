@@ -1,6 +1,7 @@
 ---
 title: "Ignoring You"
 chapter: "in the feels"
+note: "I'm trying to ignore you, and what I feel, but you just had to make it impossible, didn't you?"
 isNew: true
 ---
 
