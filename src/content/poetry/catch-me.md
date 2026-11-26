@@ -26,7 +26,8 @@ even after your feet kiss the sand,\
 And if it's the other side I choose to stand by—\
 to run away\
 Maybe reach over for my hand, leap\
-and catch me if you dare\
+and catch me if you dare
+
 but maybe that's the thing about falling
 
 if we're playing trust falls,\
