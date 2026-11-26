@@ -1,6 +1,7 @@
 ---
 title: "Somewhat Friends"
 chapter: "in the feels"
+date: 2026-10-26
 note: "Somewhat friends who somewhat like each other, who'll always somewhat know, but never really know."
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: "An Open Door"
 chapter: "in the feels"
+date: 2026-10-26
 note: "I think this is my poem of the year; you won't get a better one out of me. But this is for when you're rediscovering the dance steps you thought you forgot, and learning to live life like you did when you were six, and the world was colourful."
 ---
 

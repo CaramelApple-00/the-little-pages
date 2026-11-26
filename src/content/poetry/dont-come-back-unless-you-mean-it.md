@@ -1,6 +1,7 @@
 ---
 title: "Don't come back unless you mean it."
 chapter: "finished business"
+date: 2026-04-29
 note: "If you're coming back, I want it all. And even if you don't, please bring my heart back. Untouched."
 ---
 

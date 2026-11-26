@@ -1,6 +1,7 @@
 ---
 title: "Anyone Else"
 chapter: "in the feels"
+date: 2026-09-15
 note: "Emotion went up, structure went all the way down — and I like the deconstruction. It feels like unraveling. I'm not offering a solution yet, just steeping in the uncertainty."
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: "The winner takes it all"
 chapter: "finished business"
+date: 2026-10-26
 note: "High school shenanigans. How do I even hate the one who still has the parts of me I love? I didn't think I could, and that's the problem."
 ---
 

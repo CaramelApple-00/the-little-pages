@@ -1,6 +1,7 @@
 ---
 title: "Where do I even start?"
 chapter: "in the feels"
+date: 2026-10-26
 note: "I think the title speaks for itself. But how do I say we're meant for each other, in every which way, without sounding out of my mind?"
 ---
 

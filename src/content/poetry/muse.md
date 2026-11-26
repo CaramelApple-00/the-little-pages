@@ -1,6 +1,7 @@
 ---
 title: "Muse"
 chapter: "in the feels"
+date: 2026-10-26
 note: "I don't quite know where I was going or where this was leading, it just is, sort of like how people just are our muses—if that makes any sense at all."
 ---
 

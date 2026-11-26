@@ -3,7 +3,15 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 
 const allPoems = await getCollection('poetry', ({ data }) => !data.draft);
-const poems = allPoems.sort((a, b) => (a.data.title > b.data.title ? 1 : -1));
+// Newest first. Poems without a date go after the dated ones, A–Z by title.
+const poems = allPoems.sort((a, b) => {
+  const aTime = a.data.date?.valueOf();
+  const bTime = b.data.date?.valueOf();
+  if (aTime !== undefined && bTime === undefined) return -1;
+  if (aTime === undefined && bTime !== undefined) return 1;
+  if (aTime !== undefined && bTime !== undefined && aTime !== bTime) return bTime - aTime;
+  return a.data.title > b.data.title ? 1 : -1;
+});
 ---
 <Layout title="Poetry — The Little Pages">
   <div class="page-head">
